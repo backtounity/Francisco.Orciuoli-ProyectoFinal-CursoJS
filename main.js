@@ -7,11 +7,11 @@ class Ladrillo {
     }
 }
 
-const Ladrillo1 = new Ladrillo("comunes", 60, 65, 1000)
-const Ladrillo2 = new Ladrillo("huecos del 8", 15, 275, 198)
-const Ladrillo3 = new Ladrillo("huecos del 12", 15, 350, 144)
-const Ladrillo4 = new Ladrillo("bloques de 13", 12.5, 400, 162)
-const Ladrillo5 = new Ladrillo("bloques de 20", 12.5, 400, 108)
+const Ladrillo1 = new Ladrillo("comunes", 60, 0.067, 1000)
+const Ladrillo2 = new Ladrillo("huecos del 8", 15, 0.28, 198)
+const Ladrillo3 = new Ladrillo("huecos del 12", 15, 0.36, 144)
+const Ladrillo4 = new Ladrillo("bloques de 13", 12.5, 0.41, 162)
+const Ladrillo5 = new Ladrillo("bloques de 20", 12.5, 0.41, 108)
 
 const Ladrillos = [Ladrillo1, Ladrillo2, Ladrillo3, Ladrillo4, Ladrillo5]
 let cambioBoton = true;
@@ -55,19 +55,33 @@ if (localStorage.getItem("carritoDeLadrillos")) {
 function calcularBloque13() {
     let tipoLadrillo = document.getElementById("tipoLadrillo").value;
 
-    
-    if (tipoLadrillo === "null") {
-        alert('Por favor, elige un tipo de ladrillo válido.');
+    if (tipoLadrillo === "elije") {
+        Swal.fire({
+            icon: "error",
+            title: "Por favor, elige un tipo de ladrillo válido.",
+        });
         return;
     }
+    
 
     let metrosCuadrados = parseFloat(document.getElementById("metrosCuadrados").value);
     let cantidadLadrillos = parseFloat(document.getElementById("cantidadLadrillos").value);
     let precio = parseFloat(document.getElementById("precio").value);
     let cantidadPalets = parseFloat(document.getElementById("cantidadPalets").value);
 
+    if (isNaN(metrosCuadrados) && isNaN(cantidadLadrillos) && isNaN(precio) && isNaN(cantidadPalets)) {
+        Swal.fire({
+            icon: "error",
+            title: "Por favor completa uno de los 4 casilleros para poder calcular cuántos ladrillos necesitas.",
+        });
+        return;
+    }
+
     if (metrosCuadrados < 0 || cantidadLadrillos < 0 || precio < 0 || cantidadPalets < 0) {
-        alert('Por favor, ingrese valores no negativos en los campos.');
+        Swal.fire({
+            icon: "error",
+            title: "Por favor, ingrese valores no negativos en los campos.",
+        });
         return;
     }
 
@@ -85,52 +99,66 @@ function calcularBloque13() {
         document.getElementById("cardImg").src = './Assets/Img/bloque20.jpg';
     }
 
-    if (!isNaN(metrosCuadrados) && isNaN(cantidadLadrillos) && isNaN(precio) && isNaN(cantidadPalets)) {
-        cantidadLadrillos = metrosCuadrados * ladrilloSeleccionado.cantidadPorM2;
-        precio = metrosCuadrados * ladrilloSeleccionado.cantidadPorM2 * ladrilloSeleccionado.precioDeLista;
-        cantidadPalets = Math.ceil((metrosCuadrados * ladrilloSeleccionado.cantidadPorM2) / ladrilloSeleccionado.cantidadPorPallet);
-    } else if (isNaN(metrosCuadrados) && !isNaN(cantidadLadrillos) && isNaN(precio) && isNaN(cantidadPalets)) {
-        metrosCuadrados = cantidadLadrillos / ladrilloSeleccionado.cantidadPorM2;
-        precio = cantidadLadrillos * ladrilloSeleccionado.precioDeLista;
-        cantidadPalets = Math.ceil(cantidadLadrillos / ladrilloSeleccionado.cantidadPorPallet);
-    } else if (isNaN(metrosCuadrados) && isNaN(cantidadLadrillos) && !isNaN(precio) && isNaN(cantidadPalets)) {
-        metrosCuadrados = (precio / ladrilloSeleccionado.precioDeLista) / ladrilloSeleccionado.cantidadPorM2;
-        cantidadLadrillos = precio / ladrilloSeleccionado.precioDeLista;
-        cantidadPalets = Math.ceil((precio / ladrilloSeleccionado.precioDeLista) / ladrilloSeleccionado.cantidadPorPallet);
-    } else if (isNaN(metrosCuadrados) && isNaN(cantidadLadrillos) && isNaN(precio) && !isNaN(cantidadPalets)) {
-        metrosCuadrados = (cantidadPalets * ladrilloSeleccionado.cantidadPorPallet) / ladrilloSeleccionado.cantidadPorM2;
-        cantidadLadrillos = cantidadPalets * ladrilloSeleccionado.cantidadPorPallet;
-        precio = cantidadPalets * ladrilloSeleccionado.cantidadPorPallet * ladrilloSeleccionado.precioDeLista;
-    }
+    fetch('https://criptoya.com/api/dolar')
+        .then((response) => response.json())
+        .then(({ blue }) => {
+            
+            if (!isNaN(metrosCuadrados) && isNaN(cantidadLadrillos) && isNaN(precio) && isNaN(cantidadPalets)) {
+                cantidadLadrillos = metrosCuadrados * ladrilloSeleccionado.cantidadPorM2;
+                precio = Math.ceil((metrosCuadrados * ladrilloSeleccionado.cantidadPorM2 * ladrilloSeleccionado.precioDeLista * blue));
+                cantidadPalets = Math.ceil((metrosCuadrados * ladrilloSeleccionado.cantidadPorM2) / ladrilloSeleccionado.cantidadPorPallet);
+            } else if (isNaN(metrosCuadrados) && !isNaN(cantidadLadrillos) && isNaN(precio) && isNaN(cantidadPalets)) {
+                metrosCuadrados = Math.floor(cantidadLadrillos / ladrilloSeleccionado.cantidadPorM2);
+                precio = Math.ceil((cantidadLadrillos * ladrilloSeleccionado.precioDeLista * blue));
+                cantidadPalets = Math.ceil(cantidadLadrillos / ladrilloSeleccionado.cantidadPorPallet);
+            } else if (isNaN(metrosCuadrados) && isNaN(cantidadLadrillos) && !isNaN(precio) && isNaN(cantidadPalets)) {
+                metrosCuadrados = Math.floor((precio / (ladrilloSeleccionado.precioDeLista * blue)) / ladrilloSeleccionado.cantidadPorM2);
+                cantidadLadrillos = Math.floor(precio / (ladrilloSeleccionado.precioDeLista * blue));
+                cantidadPalets = Math.ceil((precio / (ladrilloSeleccionado.precioDeLista * blue)) / ladrilloSeleccionado.cantidadPorPallet);
+            } else if (isNaN(metrosCuadrados) && isNaN(cantidadLadrillos) && isNaN(precio) && !isNaN(cantidadPalets)) {
+                metrosCuadrados = Math.floor((cantidadPalets * ladrilloSeleccionado.cantidadPorPallet) / ladrilloSeleccionado.cantidadPorM2);
+                cantidadLadrillos = cantidadPalets * ladrilloSeleccionado.cantidadPorPallet;
+                precio = Math.ceil((cantidadPalets * ladrilloSeleccionado.cantidadPorPallet * ladrilloSeleccionado.precioDeLista * blue));
+            }
+            
+            if (cantidadLadrillos === 0) {
+                Swal.fire({
+                    icon: "error",
+                    title: `Con el monto que ingresaste no alcanza, los ladrillos ${tipoLadrillo} salen $${(ladrilloSeleccionado.precioDeLista * blue).toFixed(2)} por unidad.`,
+                });
+                return;
+            }
 
-    if (cambioBoton) {
-        document.getElementById("calcularBtn").innerText = "Reiniciar";
-        document.getElementById("calcularBtn").onclick = reiniciarCampos;
-        cambioBoton = false;
-    }
+            if (cambioBoton) {
+                document.getElementById("calcularBtn").innerText = "Reiniciar";
+                document.getElementById("calcularBtn").onclick = reiniciarCampos;
+                cambioBoton = false;
+            }
 
-    let ladrilloCarrito = {
-        tipoLadrillo: tipoLadrillo,
-        metrosCuadrados: isNaN(metrosCuadrados) || metrosCuadrados < 0 ? 0 : metrosCuadrados,
-        cantidadLadrillos: isNaN(cantidadLadrillos) || cantidadLadrillos < 0 ? metrosCuadrados * ladrilloSeleccionado.cantidadPorM2 : cantidadLadrillos,
-        precio: isNaN(precio) || precio < 0 ? metrosCuadrados * ladrilloSeleccionado.cantidadPorM2 * ladrilloSeleccionado.precioDeLista : precio,
-        cantidadPalets: isNaN(cantidadPalets) || cantidadPalets < 0 ? Math.ceil((metrosCuadrados * ladrilloSeleccionado.cantidadPorM2) / ladrilloSeleccionado.cantidadPorPallet) : cantidadPalets
-    };
+            let ladrilloCarrito = {
+                tipoLadrillo: tipoLadrillo,
+                metrosCuadrados: isNaN(metrosCuadrados) || metrosCuadrados < 0 ? 0 : metrosCuadrados,
+                cantidadLadrillos: isNaN(cantidadLadrillos) || cantidadLadrillos < 0 ? metrosCuadrados * ladrilloSeleccionado.cantidadPorM2 : cantidadLadrillos,
+                precio: isNaN(precio) || precio < 0 ? metrosCuadrados * ladrilloSeleccionado.cantidadPorM2 * ladrilloSeleccionado.precioDeLista : precio,
+                cantidadPalets: isNaN(cantidadPalets) || cantidadPalets < 0 ? Math.ceil((metrosCuadrados * ladrilloSeleccionado.cantidadPorM2) / ladrilloSeleccionado.cantidadPorPallet) : cantidadPalets
+            };
 
-    document.getElementById("metrosCuadrados").value = ladrilloCarrito.metrosCuadrados;
-    document.getElementById("cantidadLadrillos").value = ladrilloCarrito.cantidadLadrillos;
-    document.getElementById("precio").value = ladrilloCarrito.precio;
-    document.getElementById("cantidadPalets").value = ladrilloCarrito.cantidadPalets;
+            document.getElementById("metrosCuadrados").value = ladrilloCarrito.metrosCuadrados;
+            document.getElementById("cantidadLadrillos").value = ladrilloCarrito.cantidadLadrillos;
+            document.getElementById("precio").value = ladrilloCarrito.precio;
+            document.getElementById("cantidadPalets").value = ladrilloCarrito.cantidadPalets;
 
-    carritoDeLadrillos.push(ladrilloCarrito);
-    console.log(ladrilloCarrito);
-    
-
+            carritoDeLadrillos.push(ladrilloCarrito);
+        })
+        .catch((error) => {
+            console.error("Error al obtener la cotización del dólar:", error);
+        });
 }
+
 
 // Función para reiniciar los campos
 function reiniciarCampos() {
-    document.getElementById("tipoLadrillo").value = "comunes";
+    document.getElementById("tipoLadrillo").value = "elije";
     document.getElementById("metrosCuadrados").value = "";
     document.getElementById("cantidadLadrillos").value = "";
     document.getElementById("precio").value = "";
@@ -142,26 +170,31 @@ function reiniciarCampos() {
     document.getElementById("calcularBtn").onclick = calcularBloque13;
     cambioBoton = true;
 }
-document.getElementById("agregarCarrito").addEventListener("click", function () {
-    if (carritoDeLadrillos.length > 0) {
-        localStorage.setItem("carritoDeLadrillos", JSON.stringify(carritoDeLadrillos));
-    }
-});
 
-// Contador de carrito en Boton 
 document.addEventListener("DOMContentLoaded", function () {
     const carritoBtn = document.getElementById("carritoBtn");
     const carritoCount = document.getElementById("carritoCount");
-    const carritoStorage = localStorage.getItem("carritoDeLadrillos");
-    const carrito = carritoStorage ? JSON.parse(carritoStorage) : [];
-    
-    actualizarContadorCarrito();
-    
+
+    // Función para actualizar el contador del carrito
     function actualizarContadorCarrito() {
+        const carritoStorage = localStorage.getItem("carritoDeLadrillos");
+        const carrito = carritoStorage ? JSON.parse(carritoStorage) : [];
         carritoCount.innerText = carrito.length;
     }
 
-    
-    carritoBtn.addEventListener("click", function () {        
+    actualizarContadorCarrito();
+
+    // Boton de agregar al carrito
+    document.getElementById("agregarCarrito").addEventListener("click", function () {
+        if (carritoDeLadrillos.length > 0) {
+            localStorage.setItem("carritoDeLadrillos", JSON.stringify(carritoDeLadrillos));
+            reiniciarCampos();
+            actualizarContadorCarrito();
+        }
     });
+
+    carritoBtn.addEventListener("click", function () {
+        });
 });
+
+

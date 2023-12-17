@@ -73,6 +73,20 @@ if (cartStorage) {
         ulContainer.innerHTML = "";
         localStorage.removeItem("carritoDeLadrillos");
         renderCarrito(cartStorage);
+        Toastify({
+            text: "Vaciaste el carrito de Ladrillos",
+            duration: 3000,
+            destination: "./main.js",
+            newWindow: true,
+            close: true,
+            gravity: "bottom", 
+            position: "center", 
+            stopOnFocus: true, 
+            style: {
+              background: "rgb(219, 86, 62)",
+            },
+            onClick: function(){} 
+          }).showToast();
     }
 
     document.getElementById("vaciarCarrito").addEventListener("click", vaciarCarrito);
